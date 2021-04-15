@@ -1,0 +1,26 @@
+{
+  "name": "minio-pool",
+  "version": "1.0.0",
+  "description": "Minio pool",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alantishin/minio-pool.git"
+  },
+  "keywords": [
+    "minio",
+    "pool"
+  ],
+  "author": "Alan Tishin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/alantishin/minio-pool/issues"
+  },
+  "homepage": "https://github.com/alantishin/minio-pool#readme",
+  "dependencies": {
+    "minio": "^7.0.18"
+  }
+}
