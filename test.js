@@ -8,5 +8,13 @@ const pool = new Pool({
     secretKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
 })
 
-pool.connect()
-    .bucketExists('test')
+const tester = async function() {
+    const client =  await pool.connect()
+    const res = await client.bucketExists('test')
+    console.log(res)
+}
+
+tester()
+tester()
+tester()
+tester()

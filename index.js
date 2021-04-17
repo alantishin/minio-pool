@@ -1,3 +1,5 @@
+'use strict'
+
 const Minio = require('minio')
 const EventEmitter = require('events').EventEmitter
 
@@ -27,13 +29,29 @@ class Pool extends EventEmitter {
           })
     }
 
+    _pulseQueue () {
+        const resolver = this._pendingQueue.shift()
+        const client = this._clients[0]
+
+        resolver(client)
+    }
+
     connect() {
-        
+        if(this.isFull) {
+            return false
+        }
 
         const client = this._createClient()
         this._clients.push(client)
 
-        return client
+
+        const promise = new Promise((resolve, reject) => {
+            this._pendingQueue.push(resolve)
+        })
+
+        this._pulseQueue()
+
+        return promise
     }
 }
 
