@@ -5,7 +5,9 @@ const pool = new Pool({
     port: 9000,
     useSSL: false,
     accessKey: 'AKIAIOSFODNN7EXAMPLE',
-    secretKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
+    secretKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+    poolSize: 5,
+    pendingTimeout: 5000
 })
 
 const execute = async function(index) {
