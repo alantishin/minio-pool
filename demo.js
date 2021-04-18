@@ -8,13 +8,14 @@ const pool = new Pool({
     secretKey: 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY'
 })
 
-const tester = async function() {
+const execute = async function(index) {
     const client =  await pool.connect()
     const res = await client.bucketExists('test')
-    console.log(res)
+    pool.release(client)
+
+    console.log(index, res)
 }
 
-tester()
-tester()
-tester()
-tester()
+for(let i = 0; i < 100; i ++) {
+    execute(i)
+}

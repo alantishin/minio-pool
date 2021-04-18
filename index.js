@@ -1,28 +1,34 @@
 'use strict'
 
 const Minio = require('minio')
-const EventEmitter = require('events').EventEmitter
 
+class PendingItem {
+    constructor(params) {
+        this.resolve = params.resolve
+        this.reject = params.reject
+        this.rejectTimeout = params.rejectTimeout
+    }
+}
 
-class Pool extends EventEmitter {
+class Pool {
     constructor(options) {
-        super()
-
         this.options = Object.assign({}, options)
-        this.options.max = this.options.max || this.options.poolSize || 10
+        this.options.poolSize = this.options.poolSize || 10
+        this.options.pendingTimeout = this.options.pendingTimeout || 15000
 
         this._clients = []
+        this.reservedClients = []
         this._pendingQueue = []
     }
 
     get isFull() {
-        return this._clients.length >= this.options.max
+        return this._clients.length >= this.options.poolSize
     }
 
     _createClient() {
         return new Minio.Client({
             endPoint: this.options.endPoint,
-            port: this.options.port,
+            port: this.options.port || 9000,
             useSSL: this.options.useSSL,
             accessKey: this.options.accessKey,
             secretKey: this.options.secretKey
@@ -30,28 +36,61 @@ class Pool extends EventEmitter {
     }
 
     _pulseQueue () {
-        const resolver = this._pendingQueue.shift()
-        const client = this._clients[0]
+        const client = this._clients.find((el) => {
+            return this.reservedClients.indexOf(el) === -1
+        })
 
-        resolver(client)
+        if(!client) {
+            return ;
+        }
+    
+        const item = this._pendingQueue.shift()
+
+        if(!item) {
+            return ;
+        }
+
+        clearTimeout(item.rejectTimeout)
+        item.resolve(client)
+        this.reservedClients.push(client)
     }
 
     connect() {
-        if(this.isFull) {
-            return false
+        let client = null
+
+        if(!this.isFull) {
+            try {
+                client = this._createClient()
+                this._clients.push(client)
+            } catch (error) {
+                return Promise.reject(error)
+            }
         }
 
-        const client = this._createClient()
-        this._clients.push(client)
-
-
-        const promise = new Promise((resolve, reject) => {
-            this._pendingQueue.push(resolve)
+        const response = new Promise((resolve, reject) => {
+            this._pendingQueue.push(new PendingItem({
+                resolve: resolve,
+                reject: reject,
+                rejectTimeout: setTimeout(() => {
+                    this._pulseQueue()
+                    reject(new Error('Pending timeout exceed'))
+                }, this.options.pendingTimeout)
+            }))
         })
 
         this._pulseQueue()
 
-        return promise
+        return response
+    }
+
+    release(client) {
+        const index = this.reservedClients.indexOf(client);
+
+        if(index !== -1) {
+            this.reservedClients.splice(index, 1)
+        }
+
+        this._pulseQueue()
     }
 }
 
