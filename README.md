@@ -23,3 +23,8 @@ Minio connections pool
 
     // Return client to available pool
     pool.release(client)
+
+## Options
+
+  - poolSize - Max limit clients in pool. Default 10
+  - pendingTimeout - Timeout waiting for client in ms. Default 15000
