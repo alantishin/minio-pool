@@ -4,6 +4,8 @@ Minio connections pool
 
 ## Usage example
 
+    const Pool = require('minio-pool)
+
     // Init pool
     const pool = new Pool({
         endPoint: 'localhost',
